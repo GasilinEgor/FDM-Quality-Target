@@ -24,7 +24,8 @@ h2 {
     opacity: 0.8;
 }
 
-* {
-    background-color: #717182;
+header {
+    margin-bottom: 60px;
+    padding-top: 60px;
 }
 </style>

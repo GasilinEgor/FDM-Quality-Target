@@ -16,6 +16,6 @@ import Form from './Components/Form.vue';
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  background-color: #717182;
+  background-color: #5f5f5f;
 }
 </style>

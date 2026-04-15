@@ -1,6 +1,7 @@
 <script setup>
 import { onBeforeUnmount, ref } from 'vue'
 
+const emit = defineEmits(['photos-added'])
 const fileInput = ref(null)
 const isDragging = ref(false)
 const imageUrl = ref('')
@@ -11,20 +12,24 @@ function openFileDialog() {
   fileInput.value?.click()
 }
 
-function setImageFromFile(file) {
-  if (!file) return
+function setImageFromFiles(files) {
+  const imageFiles = Array.from(files || []).filter((file) => file.type.startsWith('image/'))
+  if (!imageFiles.length) return
 
-  fileName.value = file.name
+  const firstFile = imageFiles[0]
+  fileName.value = firstFile.name
 
   if (imageUrl.value) {
     URL.revokeObjectURL(imageUrl.value)
   }
-  imageUrl.value = URL.createObjectURL(file)
+  imageUrl.value = URL.createObjectURL(firstFile)
+  emit('photos-added', imageFiles)
 }
 
 function onInputChange(event) {
-  const file = event.target.files?.[0]
-  setImageFromFile(file)
+  const files = event.target.files
+  setImageFromFiles(files)
+  event.target.value = ''
 }
 
 function onDragOver(event) {
@@ -40,8 +45,8 @@ function onDragLeave(event) {
 function onDrop(event) {
   event.preventDefault()
   isDragging.value = false
-  const file = event.dataTransfer?.files?.[0]
-  setImageFromFile(file)
+  const files = event.dataTransfer?.files
+  setImageFromFiles(files)
 }
 
 onBeforeUnmount(() => {
@@ -58,6 +63,7 @@ onBeforeUnmount(() => {
       class="photo-load__input"
       type="file"
       accept="image/*"
+      multiple
       @change="onInputChange"
     />
 
@@ -84,9 +90,9 @@ onBeforeUnmount(() => {
 <style scoped>
 .photo-load {
   width: 100%;
-  max-width: 704px;
+  max-width: 1200px;
   height: 100%;
-  max-height: 400px;
+  max-height: 1200px;
 }
 
 .photo-load__input {
@@ -95,7 +101,8 @@ onBeforeUnmount(() => {
 
 .photo-load__dropzone {
   width: 100%;
-  min-height: 280px;
+  min-width: 600px;
+  min-height: 600px;
   border: 2px dashed #A60C0C;
   border-radius: 14px;
   background: #3a3a3a;
