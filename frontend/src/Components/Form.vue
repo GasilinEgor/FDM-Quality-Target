@@ -4,6 +4,7 @@ import PhotoLoad from './PhotoLoad.vue';
 import FormInfo from './FormInfo.vue';
 import PhotoSaveForm from './PhotoSaveForm.vue';
 import GetMarkButton from './GetMarkButton.vue';
+import Statistic from './Statistic.vue';
 
 const uploadedPhotos = ref([])
 
@@ -38,12 +39,16 @@ onBeforeUnmount(() => {
     <div class="button-div">
         <GetMarkButton />
     </div>
+    <div class="statistic-div">
+        <Statistic />
+    </div>
 </div>
 </template>
 <style scoped>
 .main-div {
     display: flex;
     flex-direction: column;
+    align-items: center;
 }
 
 .load-form-div {
