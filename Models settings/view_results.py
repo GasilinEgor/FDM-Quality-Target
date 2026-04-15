@@ -20,7 +20,7 @@ def get_boxes_path(folder_path):
     for file in ['*.txt']:
         box_paths.extend(glob.glob(os.path.join(folder_path, file)))
     if not box_paths:
-        print("В папке нет ффайлов пометок!")
+        print("В папке нет файлов пометок!")
         return 
     else:
         return box_paths
@@ -139,6 +139,7 @@ def _load_yolo_labels(label_path, img_w, img_h):
 
 
 def _write_dataset_yaml(dataset_root, class_names):
+    os.makedirs(dataset_root, exist_ok=True)
     yaml_path = os.path.join(dataset_root, "data.yaml")
     content = [
         f"path: {dataset_root.replace(os.sep, '/')}",
@@ -155,21 +156,60 @@ def _write_dataset_yaml(dataset_root, class_names):
         f.write("\n".join(content) + "\n")
 
 
+def _select_annotation_mode():
+    modes = {
+        "1": {
+            "mode_name": "model_presence",
+            "classes": ["3D_model", "No_3D_model"],
+            "title": "Бинарная разметка наличия 3D-модели",
+        },
+        "2": {
+            "mode_name": "defect_presence",
+            "classes": ["defect", "No_defect"],
+            "title": "Бинарная разметка наличия дефектов",
+        },
+        "3": {
+            "mode_name": "defect_type",
+            "classes": ["Cracking", "Layer_shifting", "Off_platform", "Stringing", "Warping"],
+            "title": "Разметка типа дефектов",
+        },
+    }
+    print("\nВыберите тип разметки:")
+    print("  1 - Наличие 3D-модели (бинарная)")
+    print("  2 - Наличие дефектов (бинарная)")
+    print("  3 - Тип дефектов")
+    while True:
+        choice = input("Введите 1/2/3: ").strip()
+        if choice in modes:
+            selected = modes[choice]
+            print(f"Выбрано: {selected['title']}")
+            return selected
+        print("Неверный выбор. Повторите.")
+
+
 def view_defects_img():
     MAX_W, MAX_H = 800, 800
     DEFECTS_TYPES = ['Cracking', 'Layer_shifting', 'Off_platform', 'Stringing', 'Warping']
+    selected_mode = _select_annotation_mode()
+    classes = selected_mode["classes"]
+    mode_name = selected_mode["mode_name"]
+
     dataset_root = os.path.join("datasets", "FDM-3D-Printing-Defect-Dataset")
     labels_root = os.path.join(dataset_root, "labels")
+    mode_labels_root = os.path.join(labels_root, mode_name)
+
     os.makedirs(labels_root, exist_ok=True)
-    _write_dataset_yaml(dataset_root, DEFECTS_TYPES)
+    os.makedirs(mode_labels_root, exist_ok=True)
+    _write_dataset_yaml(os.path.join(dataset_root, mode_name), classes)
 
     class_colors = [
-        (0, 255, 255),
-        (0, 255, 0),
-        (255, 255, 0),
-        (255, 0, 255),
-        (0, 128, 255),
+        (0, 255, 255), # голубой
+        (0, 255, 0), # зелёный
+        (255, 255, 0), # жёлтый
+        (255, 0, 255), # фиолетовый
+        (255, 0, 0), # красный
     ]
+
     image_entries = []
     for defect_type in DEFECTS_TYPES:
         img_folder_path = os.path.join(dataset_root, "data", defect_type)
@@ -180,7 +220,7 @@ def view_defects_img():
         print("Изображения для разметки не найдены.")
         return
 
-    win = "Разметка дефектов"
+    win = "Detection"
     cv2.namedWindow(win, cv2.WINDOW_NORMAL)
     current_index = 0
 
@@ -199,24 +239,26 @@ def view_defects_img():
         disp_h = max(1, int(round(img_h * scale)))
         interp = cv2.INTER_AREA if scale < 1.0 else cv2.INTER_LINEAR
 
-        label_dir = os.path.join(labels_root, defect_type)
+        label_dir = os.path.join(mode_labels_root, defect_type)
         os.makedirs(label_dir, exist_ok=True)
         label_path = os.path.join(label_dir, f"{Path(img_path).stem}.txt")
         boxes = _load_yolo_labels(label_path, img_w, img_h)
-        active_class = DEFECTS_TYPES.index(defect_type)
+        active_class = 0
 
         state = {"drawing": False, "start": (0, 0), "current": (0, 0)}
 
         def draw_frame():
             disp = cv2.resize(img, (disp_w, disp_h), interpolation=interp)
             for class_id, x1, y1, x2, y2 in boxes:
+                if not (0 <= class_id < len(classes)):
+                    continue
                 color = class_colors[class_id % len(class_colors)]
                 dx1 = int(round(x1 * scale))
                 dy1 = int(round(y1 * scale))
                 dx2 = int(round(x2 * scale))
                 dy2 = int(round(y2 * scale))
                 cv2.rectangle(disp, (dx1, dy1), (dx2, dy2), color, 2)
-                label = DEFECTS_TYPES[class_id]
+                label = classes[class_id]
                 cv2.putText(
                     disp,
                     label,
@@ -235,8 +277,8 @@ def view_defects_img():
 
             help_line = (
                 f"[{current_index + 1}/{len(image_entries)}] "
-                f"Class {active_class}:{DEFECTS_TYPES[active_class]} | "
-                "1..5 class, drag box, s save, u undo, space/-> next, <- prev, q/esc exit"
+                f"Mode {mode_name} | Class {active_class}:{classes[active_class]} | "
+                "1..9 class, drag box, s save, u undo, space/-> next, <- prev, q/esc exit"
             )
             cv2.putText(
                 disp,
@@ -285,7 +327,7 @@ def view_defects_img():
                 _save_yolo_labels(label_path, boxes, img_w, img_h)
                 nav = "exit"
                 break
-            if ord('1') <= key <= ord(str(len(DEFECTS_TYPES))):
+            if ord('1') <= key <= ord(str(min(len(classes), 9))):
                 active_class = key - ord('1')
                 draw_frame()
                 continue
