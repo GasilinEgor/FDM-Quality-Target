@@ -1,2 +1,7 @@
 datasets
 .venv
+
+runs/
+weights/
+*.pt
+*.pth
