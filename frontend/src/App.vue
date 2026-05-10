@@ -1,11 +1,35 @@
-<script setup lang="ts"></script>
-
+<script setup lang="ts">
+import Header from './Components/Header.vue'
+import Form from './Components/Form.vue';
+import History from './Components/History.vue';
+</script>
 <template>
-  <h1>You did it!</h1>
-  <p>
-    Visit <a href="https://vuejs.org/" target="_blank" rel="noopener">vuejs.org</a> to read the
-    documentation
-  </p>
+  <div class="app">
+    <Header />
+    <div class="form">
+      <Form />
+    </div>
+    <div class="history">
+      <History />
+    </div>
+  </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  background-color: #5f5f5f;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.history {
+  margin: 20px;
+}
+</style>
