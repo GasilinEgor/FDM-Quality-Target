@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional
-from models import Photo
+from datetime import datetime
 
 class PhotoResponse(BaseModel):
     id: int

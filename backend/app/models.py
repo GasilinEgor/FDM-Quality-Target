@@ -1,9 +1,9 @@
-from sqlmodel import sqlmodel, Field
+from sqlmodel import SQLModel, Field
 from typing import Optional
 from datetime import datetime
 
-class PhotoBase(sqlmodel):
-    filename: str = Field(min_length=100)
+class PhotoBase(SQLModel):
+    filename: str = Field(min_length=1)
     file_size: int
     polymer_type: str
     polymer_color: str
