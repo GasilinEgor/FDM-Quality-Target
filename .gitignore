@@ -1,7 +1,11 @@
 datasets
 .venv
+.env
 
 runs/
 weights/
 *.pt
 *.pth
+
+__pycache__/
+uploads/
