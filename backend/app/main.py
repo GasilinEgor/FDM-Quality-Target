@@ -3,18 +3,25 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from .core.security import validate_image
 from .core.config import settings
 from .schemas import PhotoResponse
-from .models import Photo
+from .models import Photo, create_db_tables, init_db
+from app.routers.photos import router as photos_router
 from .s3_service import get_s3_client
-import uuid
-import shutil
-import os
 from pathlib import Path
 from datetime import datetime
 from typing import AsyncGenerator
+from contextlib import asynccontextmanager
+import uuid
+import shutil
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await init_db()
+    yield
 
 UPLOAD_DIR = Path("uploads")
 UPLOAD_DIR.mkdir(exist_ok=True)
-app = FastAPI()
+app = FastAPI(lifespan=lifespan)
+app.include_router(photos_router)
 
 
 async def get_db() -> AsyncGenerator[None, None]:
@@ -23,7 +30,7 @@ async def get_db() -> AsyncGenerator[None, None]:
 
 async def create_photo_crud(photo: Photo, db: AsyncSession | None) -> Photo:
     photo.id = 1
-    photo.created_at = datetime.utcnow()
+    photo.created_at = datetime.now()
     return photo
 
 @app.post("/upload-photo", response_model=PhotoResponse)

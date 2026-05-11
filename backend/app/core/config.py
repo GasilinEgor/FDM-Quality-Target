@@ -13,6 +13,8 @@ class Settings(BaseSettings):
     S3_ACCESS_KEY_ID: str
     S3_SECRET_ACCESS_KEY: str
 
+    DATABASE_URL: str
+
 
     model_config = SettingsConfigDict(
     env_file=ENV_FILE,\
