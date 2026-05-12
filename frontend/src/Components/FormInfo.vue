@@ -1,5 +1,18 @@
 <script setup>
+import { ref, watch } from 'vue'
 
+const emit = defineEmits(['update:form-data'])
+
+const printer_input = ref('')
+const polymer_type_input = ref('')
+const polymer_color_input = ref('')
+
+watch([printer_input, polymer_type_input, polymer_color_input], () => {
+  emit('update:form-data', {
+    printer: printer_input.value, 
+    polymer_type: polymer_type_input.value, 
+    polymer_color: polymer_color_input.value })
+}, {deep: true })
 </script>
 
 <template>
@@ -7,15 +20,15 @@
     <h1>Информация</h1>
     <div class="input-div">
         <h2>Название принтера</h2>
-        <input placeholder="Введите название принтера">
+        <input placeholder="Введите название принтера" v-model="printer_input">
     </div>
     <div class="input-div">
         <h2>Тип пластика</h2>
-        <input placeholder="Введите тип пластика">
+        <input placeholder="Введите тип пластика" v-model="polymer_type_input">
     </div>
     <div class="input-div">
         <h2>Цвет пластика</h2>
-        <input placeholder="Введите цвет пластика">
+        <input placeholder="Введите цвет пластика" v-model="polymer_color_input">
     </div>
 </div>
 </template>

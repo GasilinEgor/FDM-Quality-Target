@@ -7,6 +7,11 @@ import GetMarkButton from './GetMarkButton.vue';
 import Statistic from './Statistic.vue';
 
 const uploadedPhotos = ref([])
+const formData = ref({
+  polymer_type: '',
+  polymer_color: '',
+  printer: '',
+})
 
 function addPhotos(files) {
   for (const file of files) {
@@ -15,6 +20,7 @@ function addPhotos(files) {
       id: `${Date.now()}-${Math.random()}`,
       name: file.name,
       url,
+      file,
     })
   }
 }
@@ -27,17 +33,17 @@ onBeforeUnmount(() => {
 <div class="main-div">
     <div class="load-form-div">
         <div class="left-column">
-            <PhotoSaveForm :photos="uploadedPhotos" />
+            <PhotoSaveForm :photos="uploadedPhotos"/>
         </div>
         <div class="middle-column">
-            <PhotoLoad @photos-added="addPhotos" />
+            <PhotoLoad @photos-added="addPhotos"/>
         </div>
         <div class="right-column">
-            <FormInfo />
+            <FormInfo v-model:form-data="formData"/>
         </div>
     </div>
     <div class="button-div">
-        <GetMarkButton />
+        <GetMarkButton :photos="uploadedPhotos" :form-data="formData"/>
     </div>
     <div class="statistic-div">
         <Statistic />
